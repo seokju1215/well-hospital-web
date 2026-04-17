@@ -1,5 +1,4 @@
 import Link from "next/link";
-import type { Notice } from "@prisma/client";
 import { prisma } from "@shared/lib/prisma";
 
 export const dynamic = "force-dynamic";
@@ -17,7 +16,7 @@ export default async function NoticePage({
   const currentPage = Math.max(1, parseInt(page ?? "1", 10));
   const pageSize = 10;
 
-  const [notices, total]: [Notice[], number] = await Promise.all([
+  const [notices, total]: [Awaited<ReturnType<typeof prisma.notice.findMany>>, number] = await Promise.all([
     prisma.notice.findMany({
       orderBy: { date: "desc" },
       skip: (currentPage - 1) * pageSize,
