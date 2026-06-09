@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import "./globals.css";
 import { Header } from "@widgets/header";
 import { Footer } from "@widgets/footer";
+import { AgentationInit } from "@shared/ui/agentation-init";
 
 export const metadata: Metadata = {
   title: "웰마취통증의학과의원",
@@ -22,6 +23,7 @@ export default function RootLayout({
         />
       </head>
       <body className="min-h-full flex flex-col font-sans antialiased">
+        <AgentationInit />
         <Header />
         <main className="flex-1">{children}</main>
         <Footer />
