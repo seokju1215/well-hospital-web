@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { Menu, X } from "lucide-react";
 
 const navLinks = [
@@ -14,10 +14,37 @@ const navLinks = [
   { href: "/contact", label: "오시는길" },
 ];
 
+const INDICATOR_PADDING = 4;
+
 export function Header() {
   const pathname = usePathname();
   const currentPath = pathname ?? "";
   const [open, setOpen] = useState(false);
+  const navRef = useRef<HTMLElement>(null);
+  const textRefs = useRef<(HTMLSpanElement | null)[]>([]);
+  const [indicator, setIndicator] = useState({ left: 0, width: 0, ready: false });
+
+  const activeIndex = navLinks.findIndex(({ href }) =>
+    href === "/" ? currentPath === "/" : currentPath.startsWith(href)
+  );
+
+  useEffect(() => {
+    const updateIndicator = () => {
+      const el = textRefs.current[activeIndex];
+      const nav = navRef.current;
+      if (!el || !nav) return;
+      const elRect = el.getBoundingClientRect();
+      const navRect = nav.getBoundingClientRect();
+      setIndicator({
+        left: elRect.left - navRect.left - INDICATOR_PADDING,
+        width: elRect.width + INDICATOR_PADDING * 2,
+        ready: true,
+      });
+    };
+    updateIndicator();
+    window.addEventListener("resize", updateIndicator);
+    return () => window.removeEventListener("resize", updateIndicator);
+  }, [activeIndex]);
 
   return (
     <header className="sticky top-0 z-50 bg-white border-b border-[#E2E8EC]">
@@ -27,23 +54,37 @@ export function Header() {
         </Link>
 
         {/* Desktop nav */}
-        <nav className="hidden md:flex items-center gap-1">
-          {navLinks.map(({ href, label }) => {
-            const active = href === "/" ? currentPath === "/" : currentPath.startsWith(href);
+        <nav ref={navRef} className="hidden md:flex items-center gap-1 relative">
+          {navLinks.map(({ href, label }, i) => {
+            const active = i === activeIndex;
             return (
               <Link
                 key={href}
                 href={href}
                 className={`px-4 py-2 text-sm font-medium rounded-md transition-colors ${
                   active
-                    ? "text-[#516070] border-b-2 border-[#516070]"
+                    ? "text-[#1F2E38] font-semibold"
                     : "text-[#5A6B78] hover:text-[#516070] hover:bg-[#F0F3F5]"
                 }`}
               >
-                {label}
+                <span
+                  ref={(el) => {
+                    textRefs.current[i] = el;
+                  }}
+                >
+                  {label}
+                </span>
               </Link>
             );
           })}
+          <span
+            className="absolute bottom-0 h-[2px] rounded-full bg-[#516070] transition-[transform,width,opacity] duration-300 ease-out"
+            style={{
+              width: indicator.width,
+              transform: `translateX(${indicator.left}px)`,
+              opacity: indicator.ready ? 1 : 0,
+            }}
+          />
         </nav>
 
         {/* Mobile hamburger */}
